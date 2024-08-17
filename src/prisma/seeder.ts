@@ -97,6 +97,12 @@ export class Seeder {
       //   },
       // });
     }
+    const episodeCount = await prisma.episode.count();
+    if (episodeCount === 0) {
+      await this.fetchAndInsertEpisodes(
+        'https://rickandmortyapi.com/api/episode',
+      );
+    }
 
     // // Verifica e inserta datos en Episodes
     // const episodeCount = await prisma.episode.count();
@@ -139,8 +145,48 @@ export class Seeder {
 
     console.log('Datos iniciales insertados (si no estaban presentes)');
   }
-
-  async countSpecies(url:string,speciesSet=new Set<string>()): Promise<Set<string>> {
+  async fetchAndInsertEpisodes(url: string) {
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+      for (const episode of data.results) {
+        const StatusTypeFound = await prisma.statusTypes.findFirst({
+          where: { type: 'Episodes' },
+        });
+        // let statusTaked = (episode.status as string).toLowerCase();
+        // if (statusTaked === 'active') statusTaked = 'Active';
+        // else statusTaked = 'Cancelled';
+        const statusFound = await prisma.status.findFirst({
+          where: {
+            status: {
+              equals: 'Active',
+              mode: 'insensitive',
+            },
+            statusTypeId: StatusTypeFound?.id,
+          },
+        });
+        const dto = {
+          id: episode.id as number,
+          name: episode.name as string,
+          airDate: new Date(episode.air_date as string),
+          episodeCode: episode.episode as string,
+          statusId: (statusFound?.id as number) ?? undefined,
+          duration: 23,
+        };
+        await prisma.episode.create({ data: dto });
+        console.log('Episodio insertado');
+      }
+      if (data.info.next) {
+        await this.fetchAndInsertEpisodes(data.info.next);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async countSpecies(
+    url: string,
+    speciesSet = new Set<string>(),
+  ): Promise<Set<string>> {
     try {
       const response = await axios.get(url);
       const data = response.data;
@@ -151,12 +197,11 @@ export class Seeder {
         }
       }
       if (data.info.next) {
-        await this.countSpecies(data.info.next,speciesSet);
+        await this.countSpecies(data.info.next, speciesSet);
       }
-
     } catch (e) {
       console.log(e);
-      
+
       return new Set<string>();
     }
     console.log(`Number of unique species: ${speciesSet.size}`);
