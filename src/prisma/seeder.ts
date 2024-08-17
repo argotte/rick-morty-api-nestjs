@@ -84,18 +84,6 @@ export class Seeder {
       await this.fetchAndInsertCharacters(
         'https://rickandmortyapi.com/api/character',
       );
-      // const status1 = await prisma.status.findFirst({
-      //   where: { status: 'Online' },
-      // });
-
-      // await prisma.character.create({
-      //   data: {
-      //     id: 1,
-      //     name: 'Character1',
-      //     statusId: status1?.id,
-      //     // species: 'Human',
-      //   },
-      // });
     }
     const episodeCount = await prisma.episode.count();
     if (episodeCount === 0) {
@@ -103,46 +91,6 @@ export class Seeder {
         'https://rickandmortyapi.com/api/episode',
       );
     }
-
-    // // Verifica e inserta datos en Episodes
-    // const episodeCount = await prisma.episode.count();
-    // if (episodeCount === 0) {
-    //   const status1 = await prisma.status.findFirst({
-    //     where: { status: 'Online' },
-    //   });
-
-    //   await prisma.episode.create({
-    //     data: {
-    //       id: 1,
-    //       name: 'Episode1',
-    //       airDate: new Date(),
-    //       episodeCode: 'E01',
-    //       statusId: status1?.id,
-    //       duration: 45,
-    //     },
-    //   });
-    // }
-
-    // // Verifica e inserta datos en CharacterEpisodes
-    // const characterEpisodeCount = await prisma.characterEpisodes.count();
-    // if (characterEpisodeCount === 0) {
-    //   const character1 = await prisma.character.findFirst({
-    //     where: { name: 'Character1' },
-    //   });
-    //   const episode1 = await prisma.episode.findFirst({
-    //     where: { name: 'Episode1' },
-    //   });
-
-    //   await prisma.characterEpisodes.create({
-    //     data: {
-    //       characterId: character1?.id,
-    //       episodeId: episode1?.id,
-    //       startTime: 0,
-    //       endTime: 45,
-    //     },
-    //   });
-    // }
-
     console.log('Datos iniciales insertados (si no estaban presentes)');
   }
   async fetchAndInsertEpisodes(url: string) {
@@ -260,18 +208,3 @@ export class Seeder {
 }
 
 const prisma = new PrismaClient();
-
-// async function main() {
-//   const seeder = new Seeder();
-//   await seeder.seed();
-
-// }
-
-// main()
-//   .catch((e) => {
-//     console.error(e);
-//     process.exit(1);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
