@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model StatusTypes {
+  id       Int      @id @default(autoincrement())
+  type     String
+  statuses Status[] // Relación uno a muchos con Status
+}
+
+model Status {
+  id          Int          @id @default(autoincrement())
+  statusTypeId Int?
+  statusType  StatusTypes? @relation(fields: [statusTypeId], references: [id])
+  status      String
+  characters  Character[]
+  episodes    Episode[]
+}
+
+model Categories {
+  id           Int            @id @default(autoincrement())
+  category     String
+  subcategories Subcategory[] // Relación uno a muchos con Subcategory
+}
+
+model Subcategory {
+  id         Int        @id @default(autoincrement())
+  categoryId Int
+  category   Categories @relation(fields: [categoryId], references: [id])
+  subcategory String
+  characters  Character[]
+
+}
+
+model Character {
+  id          Int                @id
+  name        String
+  statusId    Int?
+  speciesId   Int?
+  status      Status?            @relation(fields: [statusId], references: [id])
+  species     Subcategory?      @relation(fields: [speciesId], references: [id])
+  episodes    CharacterEpisodes[]
+}
+
+model Episode {
+  id          Int                @id
+  name        String
+  airDate     DateTime?
+  episodeCode String?
+  statusId    Int?
+  status      Status?            @relation(fields: [statusId], references: [id])
+  duration    Int?
+  episodes    CharacterEpisodes[]
+}
+
+model CharacterEpisodes {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  episodeId   Int
+  startTime   Int
+  endTime     Int
+  character   Character @relation(fields: [characterId], references: [id])
+  episode     Episode   @relation(fields: [episodeId], references: [id])
+}
