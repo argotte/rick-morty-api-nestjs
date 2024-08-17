@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { PrismaClient } from '@prisma/client';
+import { Character, PrismaClient } from '@prisma/client';
+import axios from 'axios';
 export class Seeder {
   private prisma: PrismaClient;
 
@@ -7,7 +8,7 @@ export class Seeder {
     this.prisma = new PrismaClient();
   }
 
-  async seed(){
+  async seed() {
     // Verifica e inserta datos en StatusTypes
     const statusTypeCount = await prisma.statusTypes.count();
     if (statusTypeCount === 0) {
@@ -70,22 +71,25 @@ export class Seeder {
       });
     }
 
-    // // Verifica e inserta datos en Characters
-    // const characterCount = await prisma.character.count();
-    // if (characterCount === 0) {
-    //   const status1 = await prisma.status.findFirst({
-    //     where: { status: 'Online' },
-    //   });
+    // Verifica e inserta datos en Characters
+    const characterCount = await prisma.character.count();
+    if (characterCount === 0) {
+      await this.fetchAndInsertCharacters(
+        'https://rickandmortyapi.com/api/character',
+      );
+      // const status1 = await prisma.status.findFirst({
+      //   where: { status: 'Online' },
+      // });
 
-    //   await prisma.character.create({
-    //     data: {
-    //       id: 1,
-    //       name: 'Character1',
-    //       statusId: status1?.id,
-    //       // species: 'Human',
-    //     },
-    //   });
-    // }
+      // await prisma.character.create({
+      //   data: {
+      //     id: 1,
+      //     name: 'Character1',
+      //     statusId: status1?.id,
+      //     // species: 'Human',
+      //   },
+      // });
+    }
 
     // // Verifica e inserta datos en Episodes
     // const episodeCount = await prisma.episode.count();
@@ -127,6 +131,57 @@ export class Seeder {
     // }
 
     console.log('Datos iniciales insertados (si no estaban presentes)');
+  }
+  async fetchAndInsertCharacters(url: string) {
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+      for (const character of data.results) {
+        let specieTaked = (character.species as string).toLowerCase();
+        if (specieTaked === 'human') specieTaked = 'Human';
+        else specieTaked = 'Alien';
+        let statusTaked = (character.status as string).toLowerCase();
+        if (statusTaked === 'alive') statusTaked = 'Active';
+        else statusTaked = 'Suspended';
+        const specieFound = await prisma.subcategory.findFirst({
+          where: {
+            subcategory: {
+              equals: specieTaked,
+              mode: 'insensitive',
+            },
+          },
+        }); // Busque en subcategory donde haya Human
+        const StatusTypeFound = await prisma.statusTypes.findFirst({
+          where: { type: 'Characters' },
+        });
+        console.log(StatusTypeFound);
+        const statusFound = await prisma.status.findFirst({
+          where: {
+            status: {
+              equals: statusTaked,
+              mode: 'insensitive',
+            },
+            statusTypeId: StatusTypeFound?.id,
+          },
+        });
+
+        const dto: Character = {
+          id: character.id,
+          name: character.name,
+          statusId: statusFound?.id ?? undefined,
+          speciesId: specieFound?.id ?? undefined,
+          // status: character.status,
+          // species: character.species,
+        };
+        await prisma.character.create({ data: dto });
+
+      }
+      if (data.info.next) {
+        await this.fetchAndInsertCharacters(data.info.next);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
