@@ -57,11 +57,18 @@ export class Seeder {
       const categorySeason = await prisma.categories.findFirst({
         where: { category: 'Season' },
       });
-
+      const countSpecies = await this.countSpecies(
+        'https://rickandmortyapi.com/api/character',
+      );
+      for (const specie of countSpecies) {
+        await prisma.subcategory.create({
+          data: { categoryId: categorySpecies?.id, subcategory: specie },
+        });
+      }
       await prisma.subcategory.createMany({
         data: [
-          { categoryId: categorySpecies?.id, subcategory: 'Human' },
-          { categoryId: categorySpecies?.id, subcategory: 'Alien' },
+          // { categoryId: categorySpecies?.id, subcategory: 'Human' },
+          // { categoryId: categorySpecies?.id, subcategory: 'Alien' },
           { categoryId: categorySeason?.id, subcategory: 'SEASON 1' },
           { categoryId: categorySeason?.id, subcategory: 'SEASON 2' },
           { categoryId: categorySeason?.id, subcategory: 'SEASON 3' },
@@ -132,14 +139,37 @@ export class Seeder {
 
     console.log('Datos iniciales insertados (si no estaban presentes)');
   }
+
+  async countSpecies(url:string,speciesSet=new Set<string>()): Promise<Set<string>> {
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+
+      for (const character of data.results) {
+        if (character.species) {
+          speciesSet.add(character.species.toLowerCase());
+        }
+      }
+      if (data.info.next) {
+        await this.countSpecies(data.info.next,speciesSet);
+      }
+
+    } catch (e) {
+      console.log(e);
+      
+      return new Set<string>();
+    }
+    console.log(`Number of unique species: ${speciesSet.size}`);
+    return speciesSet;
+  }
   async fetchAndInsertCharacters(url: string) {
     try {
       const response = await axios.get(url);
       const data = response.data;
       for (const character of data.results) {
-        let specieTaked = (character.species as string).toLowerCase();
-        if (specieTaked === 'human') specieTaked = 'Human';
-        else specieTaked = 'Alien';
+        const specieTaked = (character.species as string).toLowerCase();
+        // if (specieTaked === 'human') specieTaked = 'Human';
+        // else specieTaked = 'Alien';
         let statusTaked = (character.status as string).toLowerCase();
         if (statusTaked === 'alive') statusTaked = 'Active';
         else statusTaked = 'Suspended';
@@ -174,7 +204,6 @@ export class Seeder {
           // species: character.species,
         };
         await prisma.character.create({ data: dto });
-
       }
       if (data.info.next) {
         await this.fetchAndInsertCharacters(data.info.next);
