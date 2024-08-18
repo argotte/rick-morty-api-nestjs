@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Put,
-  Delete,
   Param,
   Body,
   Query,
@@ -68,8 +67,8 @@ export class TaskController {
     return this.taskService.updateTask(id, data);
   }
 
-  @Delete(':id')
-  async deleteTask(@Param('id') id: number) {
+  @Put('suspend/:id')
+  async deleteTask(@Param('id', ParseIntPipe) id: number) {
     if (id === undefined) {
       throw new Error('ID is required');
     }
@@ -78,10 +77,6 @@ export class TaskController {
     }
     if (id <= 0) {
       throw new Error('ID must be a positive number');
-    }
-    const task = await this.taskService.getTaskById(id);
-    if (!task) {
-      throw new Error('Task not found');
     }
     return this.taskService.deleteTask(id);
   }

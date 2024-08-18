@@ -157,6 +157,24 @@ export class TaskService {
   }
 
   async deleteTask(id: number): Promise<Character> {
-    return this.prisma.character.delete({ where: { id } });
+    //check if exists 
+    const existingCharacter = await this.prisma.character.findUnique({
+      where: { id },
+    });
+    if (!existingCharacter) {
+      throw new BadRequestException('Character not found');
+    }
+    //check if already suspended
+    if (existingCharacter.statusId === 2) {
+      throw new BadRequestException('Character already suspended');
+    }
+    //suspend
+    const dto: Character = {
+      id,
+      name: existingCharacter.name,
+      statusId: 2, //suspend
+      speciesId: existingCharacter.speciesId,
+    };
+    return this.prisma.character.update({ where: { id }, data: dto });
   }
 }
