@@ -10,12 +10,15 @@ import {
 } from '@nestjs/common';
 import { Character } from '@prisma/client';
 import { TaskService } from './task.service';
-
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+@ApiTags('character')
 @Controller('character')
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get all characters' })
+  @ApiQuery({ name: 'page', required: false })
   async getAllTasks(@Query('page') page: number = 1): Promise<{
     totalCharacters: number;
     currentPage: number;
@@ -28,11 +31,14 @@ export class TaskController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a character by its ID' })
   async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Character> {
     return this.taskService.getTaskById(id);
   }
 
   @Get('species/:speciesId')
+  @ApiOperation({ summary: 'Get all characters by species' })
+  @ApiQuery({ name: 'page', required: false })
   async getCharactersBySpecies(
     @Param('speciesId', ParseIntPipe) speciesId: number,
     @Query('page') page: number = 1,
@@ -48,6 +54,8 @@ export class TaskController {
   }
 
   @Get('status/:statusId')
+  @ApiOperation({ summary: 'Get all characters by status' })
+  @ApiQuery({ name: 'page', required: false })
   async getCharactersByStatus(
     @Param('statusId', ParseIntPipe) statusId: number,
     @Query('page') page: number = 1,
@@ -63,6 +71,17 @@ export class TaskController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a character by its ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Character ID' })
+  @ApiBody({
+    schema: {
+      example: {
+        name: 'Rick Sanchez',
+        statusId: 1,
+        speciesId: 1,
+      },
+    },
+  })
   async updateTask(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Character,
@@ -71,6 +90,7 @@ export class TaskController {
   }
 
   @Put('suspend/:id')
+  @ApiOperation({ summary: 'Suspend a character by its ID' })
   async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<Character> {
     if (id === undefined) {
       throw new Error('ID is required');
