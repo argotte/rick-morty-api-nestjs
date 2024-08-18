@@ -10,7 +10,14 @@ import {
 } from '@nestjs/common';
 import { Character } from '@prisma/client';
 import { TaskService } from './task.service';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CharacterDto } from './CharacterDto/character.dto';
 @ApiTags('character')
 @Controller('character')
 export class TaskController {
@@ -25,14 +32,16 @@ export class TaskController {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
     return this.taskService.getAllTasks(page);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a character by its ID' })
-  async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Character> {
+  async getTaskById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CharacterDto> {
     return this.taskService.getTaskById(id);
   }
   @Get('/specie/:id')
@@ -53,7 +62,7 @@ export class TaskController {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
     return this.taskService.getCharactersBySpecies(speciesId, page);
   }
@@ -70,7 +79,7 @@ export class TaskController {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
     return this.taskService.getCharactersByStatus(statusId, page);
   }
@@ -90,22 +99,19 @@ export class TaskController {
   async updateTask(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Character,
-  ): Promise<Character> {
+  ): Promise<CharacterDto> {
     return this.taskService.updateTask(id, data);
   }
 
   @Put('suspend/:id')
   @ApiOperation({ summary: 'Suspend a character by its ID' })
-  async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<Character> {
-    if (id === undefined) {
-      throw new Error('ID is required');
-    }
-    if (typeof id !== 'number') {
-      throw new Error('ID must be a number');
-    }
-    if (id <= 0) {
-      throw new Error('ID must be a positive number');
-    }
+  async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.taskService.deleteTask(id);
+  }
+
+  @Put('revive/:id')
+  @ApiOperation({ summary: 'Active a character by its ID' })
+  async reviveTask(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.taskService.reviveTask(id);
   }
 }

@@ -3,6 +3,6 @@
 export class CharacterDto {
   id: number;
   name: string;
-  species: string;
   status: string;
+  species: string;
 }

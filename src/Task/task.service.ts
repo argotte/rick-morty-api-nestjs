@@ -2,6 +2,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Character } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CharacterDto } from './CharacterDto/character.dto';
 
 @Injectable()
 export class TaskService {
@@ -13,14 +14,29 @@ export class TaskService {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
+    const characterResponse: CharacterDto[] = [];
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
     const characters = await this.prisma.character.findMany({
       skip,
       take: pageSize,
     });
+    if (!characters) {
+      throw new BadRequestException('No characters found');
+    }
+
+    for (let i = 0; i < characters.length; i++) {
+      const character: CharacterDto = {
+        id: characters[i].id,
+        name: characters[i].name,
+        status: (await this.getStatusById(characters[i].statusId)) ?? undefined,
+        species:
+          (await this.getSpeciesById(characters[i].speciesId)) ?? undefined,
+      };
+      characterResponse.push(character);
+    }
 
     const totalCharacters = await this.prisma.character.count();
     const totalPages = Math.ceil(totalCharacters / pageSize);
@@ -38,12 +54,21 @@ export class TaskService {
       totalPages,
       nextPageUrl,
       prevPageUrl,
-      data: characters,
+      data: characterResponse,
     };
   }
 
-  async getTaskById(id: number): Promise<Character> {
-    return this.prisma.character.findUnique({ where: { id } });
+  async getTaskById(id: number): Promise<CharacterDto> {
+    const character: Character = await this.prisma.character.findUnique({
+      where: { id },
+    });
+    const response: CharacterDto = {
+      id: character.id,
+      name: character.name,
+      status: (await this.getStatusById(character.statusId)) ?? undefined,
+      species: (await this.getSpeciesById(character.speciesId)) ?? undefined,
+    };
+    return response;
   }
 
   async getCharactersBySpecies(
@@ -55,8 +80,9 @@ export class TaskService {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
+    const characterResponse: CharacterDto[] = [];
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
     //check if species exists
@@ -71,6 +97,19 @@ export class TaskService {
       skip,
       take: pageSize,
     });
+    if (!characters) {
+      throw new BadRequestException('No characters found');
+    }
+    for (let i = 0; i < characters.length; i++) {
+      const character: CharacterDto = {
+        id: characters[i].id,
+        name: characters[i].name,
+        status: (await this.getStatusById(characters[i].statusId)) ?? undefined,
+        species:
+          (await this.getSpeciesById(characters[i].speciesId)) ?? undefined,
+      };
+      characterResponse.push(character);
+    }
     const totalCharacters = await this.prisma.character.count({
       where: { speciesId },
     });
@@ -94,7 +133,7 @@ export class TaskService {
       nextPageUrl,
       prevPageUrl,
 
-      data: characters,
+      data: characterResponse,
     };
   }
 
@@ -107,8 +146,9 @@ export class TaskService {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: Character[];
+    data: CharacterDto[];
   }> {
+    const characterResponse: CharacterDto[] = [];
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
     //check if status exists
@@ -123,6 +163,19 @@ export class TaskService {
       skip,
       take: pageSize,
     });
+    if (!characters) {
+      throw new BadRequestException('No characters found');
+    }
+    for (let i = 0; i < characters.length; i++) {
+      const character: CharacterDto = {
+        id: characters[i].id,
+        name: characters[i].name,
+        status: (await this.getStatusById(characters[i].statusId)) ?? undefined,
+        species:
+          (await this.getSpeciesById(characters[i].speciesId)) ?? undefined,
+      };
+      characterResponse.push(character);
+    }
     const totalCharacters = await this.prisma.character.count({
       where: { statusId },
     });
@@ -143,11 +196,11 @@ export class TaskService {
       totalPages,
       nextPageUrl,
       prevPageUrl,
-      data: characters,
+      data: characterResponse,
     };
   }
 
-  async updateTask(id: number, data: Character): Promise<Character> {
+  async updateTask(id: number, data: Character): Promise<CharacterDto> {
     const existingCharacter = await this.prisma.character.findUnique({
       where: { id },
     });
@@ -187,10 +240,17 @@ export class TaskService {
       }
     }
 
-    return this.prisma.character.update({ where: { id }, data: dto });
+    await this.prisma.character.update({ where: { id }, data: dto });
+    const response: CharacterDto = {
+      id: dto.id,
+      name: dto.name,
+      status: await this.getStatusById(dto.statusId),
+      species: await this.getSpeciesById(dto.speciesId),
+    };
+    return response;
   }
 
-  async deleteTask(id: number): Promise<Character> {
+  async deleteTask(id: number): Promise<string> {
     //check if exists
     const existingCharacter = await this.prisma.character.findUnique({
       where: { id },
@@ -200,7 +260,7 @@ export class TaskService {
     }
     //check if already suspended
     if (existingCharacter.statusId === 2) {
-      throw new BadRequestException('Character already suspended');
+      return 'Character was already suspended';
     }
     //suspend
     const dto: Character = {
@@ -209,15 +269,52 @@ export class TaskService {
       statusId: 2, //suspend
       speciesId: existingCharacter.speciesId,
     };
-    return this.prisma.character.update({ where: { id }, data: dto });
+    await this.prisma.character.update({ where: { id }, data: dto });
+    return `Character ${dto.name} suspended`;
+  }
+
+  async reviveTask(id: number): Promise<string> {
+    //check if exists
+    const existingCharacter = await this.prisma.character.findUnique({
+      where: { id },
+    });
+    if (!existingCharacter) {
+      throw new BadRequestException('Character not found');
+    }
+    //check if already suspended
+    if (existingCharacter.statusId === 1) {
+      return 'Character was already Active';
+    }
+    //suspend
+    const dto: Character = {
+      id,
+      name: existingCharacter.name,
+      statusId: 1, //suspend
+      speciesId: existingCharacter.speciesId,
+    };
+    await this.prisma.character.update({ where: { id }, data: dto });
+    return `Character ${dto.name} Active again`;
   }
 
   async getSpeciesById(id: number): Promise<string> {
-    const response= await this.prisma.subcategory.findUnique({ where: { id, categoryId: 1 } });
-    //check if exists 
-    if(!response){
+    const response = await this.prisma.subcategory.findUnique({
+      where: { id, categoryId: 1 },
+    });
+    //check if exists
+    if (!response) {
       throw new BadRequestException('Specie not found');
     }
     return response.subcategory;
+  }
+
+  async getStatusById(id: number): Promise<string> {
+    const response = await this.prisma.status.findUnique({
+      where: { id, statusTypeId: 1 },
+    });
+    //check if exists
+    if (!response) {
+      throw new BadRequestException('Specie not found');
+    }
+    return response.status;
   }
 }
