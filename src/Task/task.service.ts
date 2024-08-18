@@ -59,6 +59,13 @@ export class TaskService {
   }> {
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
+    //check if species exists
+    const speciesExist = await this.prisma.subcategory.findUnique({
+      where: { categoryId: 1, id: speciesId }, // speciesId
+    });
+    if (!speciesExist) {
+      throw new BadRequestException('That kind of species does not exist');
+    }
     const characters = await this.prisma.character.findMany({
       where: { speciesId: speciesId },
       skip,
@@ -104,6 +111,13 @@ export class TaskService {
   }> {
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
+    //check if status exists
+    const statusExist = await this.prisma.status.findUnique({
+      where: { id: statusId },
+    });
+    if (!statusExist) {
+      throw new BadRequestException('That kind of status does not exist');
+    }
     const characters = await this.prisma.character.findMany({
       where: { statusId: statusId },
       skip,
