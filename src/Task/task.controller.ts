@@ -2,11 +2,11 @@
 import {
   Controller,
   Get,
-  Post,
   Put,
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 import { Character } from '@prisma/client';
 import { TaskService } from './task.service';
@@ -16,8 +16,14 @@ export class TaskController {
   constructor(private taskService: TaskService) {}
 
   @Get()
-  async getAllTasks() {
-    return this.taskService.getAllTasks();
+  async getAllTasks(@Query('page') page: number = 1): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    data: Character[];
+  }> {
+    return this.taskService.getAllTasks(page);
   }
 
   @Get(':id')
@@ -25,10 +31,15 @@ export class TaskController {
     return this.taskService.getTaskById(id);
   }
 
-  @Post()
-  async createTask(@Body() data: Character) {
-    return this.taskService.createTask(data);
+  @Get(':speciesId')
+  async getCharactersBySpecies(@Param('species') speciesId: number) {
+    return this.taskService.getCharactersBySpecies(speciesId);
   }
+
+  // @Post()
+  // async createTask(@Body() data: Character) {
+  //   return this.taskService.createTask(data);
+  // }
 
   @Put(':id')
   async updateTask(@Param('id') id: number, @Body() data: Character) {
