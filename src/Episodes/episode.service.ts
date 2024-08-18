@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EpisodeDto } from './EpisodeDto/episode.dto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 // import { EpisodeDto } from './EpisodeDto/episode.dto';
-
+@Injectable()
 export class EpisodeService {
   constructor(private prisma: PrismaService) {}
 
@@ -16,9 +16,11 @@ export class EpisodeService {
     data: EpisodeDto[];
   }> {
     const episodeResponse: EpisodeDto[] = [];
+    const pageSize = 5;
+    const skip = (page - 1) * pageSize;
     const episodes = await this.prisma.episode.findMany({
-      skip: (page - 1) * 20,
-      take: 20,
+      skip,
+      take: pageSize,
     });
     if (!episodes) {
       throw new BadRequestException('No characters found');
@@ -31,14 +33,20 @@ export class EpisodeService {
         episode: episodes[i].episodeCode,
         status: (await this.getStatusById(episodes[i].statusId)) ?? undefined,
         duration: episodes[i].duration,
+        season:
+          (await this.getSubcategoryById(episodes[i].seasonId)) ?? undefined,
       };
       episodeResponse.push(episode);
     }
     const totalEpisodes = await this.prisma.episode.count();
-    const totalPages = Math.ceil(totalEpisodes / 20);
-
-    const nextPageUrl = page < totalPages ? `/episodes?page=${page + 1}` : null;
-    const prevPageUrl = page > 1 ? `/episodes?page=${page - 1}` : null;
+    const totalPages = Math.ceil(totalEpisodes / pageSize);
+    let nextPageNumber: number = page;
+    nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
+    const nextPageUrl =
+      page < totalPages ? `/episode?page=${nextPageNumber}` : null;
+    const prevPageUrl = page > 1 ? `/episode?page=${prevPageNumber}` : null;
 
     return {
       totalEpisodes,
@@ -59,5 +67,16 @@ export class EpisodeService {
       throw new BadRequestException('Specie not found');
     }
     return response.status;
+  }
+
+  async getSubcategoryById(id: number): Promise<string> {
+    const response = await this.prisma.subcategory.findUnique({
+      where: { id },
+    });
+    //check if exists
+    if (!response) {
+      throw new BadRequestException('Specie not found');
+    }
+    return response.subcategory;
   }
 }

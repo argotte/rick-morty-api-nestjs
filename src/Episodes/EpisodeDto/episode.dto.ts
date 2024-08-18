@@ -6,6 +6,7 @@ export class EpisodeDto {
   episode: string;
   status: string;
   duration: number;
+  season: string;
 }
 
 // model Episode {
