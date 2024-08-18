@@ -11,7 +11,7 @@ import {
 import { Character } from '@prisma/client';
 import { TaskService } from './task.service';
 
-@Controller('tasks')
+@Controller('character')
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
@@ -27,7 +27,7 @@ export class TaskController {
   }
 
   @Get(':id')
-  async getTaskById(@Param('id') id: number) {
+  async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Character> {
     return this.taskService.getTaskById(id);
   }
 
@@ -63,12 +63,12 @@ export class TaskController {
   async updateTask(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Character,
-  ) {
+  ): Promise<Character> {
     return this.taskService.updateTask(id, data);
   }
 
   @Put('suspend/:id')
-  async deleteTask(@Param('id', ParseIntPipe) id: number) {
+  async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<Character> {
     if (id === undefined) {
       throw new Error('ID is required');
     }

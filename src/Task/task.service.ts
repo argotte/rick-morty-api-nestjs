@@ -26,7 +26,7 @@ export class TaskService {
     let nextPageNumber: number = page;
     nextPageNumber++;
     const nextPageUrl =
-      page < totalPages ? `/tasks?page=${nextPageNumber}` : null;
+      page < totalPages ? `/character?page=${nextPageNumber}` : null;
 
     return {
       totalCharacters,
@@ -66,7 +66,7 @@ export class TaskService {
     nextPageNumber++;
     const nextPageUrl =
       page < totalPages
-        ? `/tasks/species/${speciesId}?page=${nextPageNumber}`
+        ? `/character/species/${speciesId}?page=${nextPageNumber}`
         : null;
     return {
       totalCharacters,
@@ -102,7 +102,7 @@ export class TaskService {
     nextPageNumber++;
     const nextPageUrl =
       page < totalPages
-        ? `/tasks/status/${statusId}?page=${nextPageNumber}`
+        ? `/character/status/${statusId}?page=${nextPageNumber}`
         : null;
     return {
       totalCharacters,
