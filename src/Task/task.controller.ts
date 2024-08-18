@@ -32,10 +32,9 @@ export class TaskController {
     return this.taskService.getTaskById(id);
   }
 
-
   @Get('species/:speciesId')
   async getCharactersBySpecies(
-    @Param('speciesId',ParseIntPipe) speciesId: number,
+    @Param('speciesId', ParseIntPipe) speciesId: number,
     @Query('page') page: number = 1,
   ): Promise<{
     totalCharacters: number;
@@ -49,7 +48,7 @@ export class TaskController {
 
   @Get('status/:statusId')
   async getCharactersByStatus(
-    @Param('statusId',ParseIntPipe) statusId: number,
+    @Param('statusId', ParseIntPipe) statusId: number,
     @Query('page') page: number = 1,
   ): Promise<{
     totalCharacters: number;
@@ -60,9 +59,12 @@ export class TaskController {
   }> {
     return this.taskService.getCharactersByStatus(statusId, page);
   }
-  
+
   @Put(':id')
-  async updateTask(@Param('id') id: number, @Body() data: Character) {
+  async updateTask(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Character,
+  ) {
     return this.taskService.updateTask(id, data);
   }
 

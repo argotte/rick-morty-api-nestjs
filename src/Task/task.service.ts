@@ -123,7 +123,7 @@ export class TaskService {
     }
 
     const dto: Character = {
-      id: data.id,
+      id,
       name: data.name ?? existingCharacter.name,
       statusId: data.statusId ?? existingCharacter.statusId,
       speciesId: data.speciesId ?? existingCharacter.speciesId,
