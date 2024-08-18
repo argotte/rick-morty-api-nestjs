@@ -211,4 +211,13 @@ export class TaskService {
     };
     return this.prisma.character.update({ where: { id }, data: dto });
   }
+
+  async getSpeciesById(id: number): Promise<string> {
+    const response= await this.prisma.subcategory.findUnique({ where: { id, categoryId: 1 } });
+    //check if exists 
+    if(!response){
+      throw new BadRequestException('Specie not found');
+    }
+    return response.subcategory;
+  }
 }

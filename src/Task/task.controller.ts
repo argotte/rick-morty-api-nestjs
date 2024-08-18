@@ -35,6 +35,11 @@ export class TaskController {
   async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Character> {
     return this.taskService.getTaskById(id);
   }
+  @Get('/specie/:id')
+  @ApiOperation({ summary: 'Get a species name by its ID' })
+  async getSpeciesById(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.taskService.getSpeciesById(id);
+  }
 
   @Get('species/:speciesId')
   @ApiOperation({ summary: 'Get all characters by species' })
