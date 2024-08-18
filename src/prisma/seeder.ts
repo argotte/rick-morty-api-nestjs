@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Character, PrismaClient } from '@prisma/client';
+import { Character, Episode, PrismaClient } from '@prisma/client';
 import axios from 'axios';
 export class Seeder {
   private prisma: PrismaClient;
@@ -65,17 +65,28 @@ export class Seeder {
           data: { categoryId: categorySpecies?.id, subcategory: specie },
         });
       }
-      await prisma.subcategory.createMany({
-        data: [
-          // { categoryId: categorySpecies?.id, subcategory: 'Human' },
-          // { categoryId: categorySpecies?.id, subcategory: 'Alien' },
-          { categoryId: categorySeason?.id, subcategory: 'SEASON 1' },
-          { categoryId: categorySeason?.id, subcategory: 'SEASON 2' },
-          { categoryId: categorySeason?.id, subcategory: 'SEASON 3' },
-          { categoryId: categorySeason?.id, subcategory: 'SEASON 4' },
-          { categoryId: categorySeason?.id, subcategory: 'SEASON 5' },
-        ],
-      });
+      const countSeasons = await this.countSeasons(
+        'https://rickandmortyapi.com/api/episode',
+      );
+      for (const season of countSeasons) {
+        await prisma.subcategory.create({
+          data: {
+            categoryId: categorySeason?.id,
+            subcategory: season,
+          },
+        });
+      }
+      // await prisma.subcategory.createMany({
+      //   data: [
+      //     // { categoryId: categorySpecies?.id, subcategory: 'Human' },
+      //     // { categoryId: categorySpecies?.id, subcategory: 'Alien' },
+      //     { categoryId: categorySeason?.id, subcategory: 'SEASON 1' },
+      //     { categoryId: categorySeason?.id, subcategory: 'SEASON 2' },
+      //     { categoryId: categorySeason?.id, subcategory: 'SEASON 3' },
+      //     { categoryId: categorySeason?.id, subcategory: 'SEASON 4' },
+      //     { categoryId: categorySeason?.id, subcategory: 'SEASON 5' },
+      //   ],
+      // });
     }
 
     // Verifica e inserta datos en Characters
@@ -101,9 +112,6 @@ export class Seeder {
         const StatusTypeFound = await prisma.statusTypes.findFirst({
           where: { type: 'Episodes' },
         });
-        // let statusTaked = (episode.status as string).toLowerCase();
-        // if (statusTaked === 'active') statusTaked = 'Active';
-        // else statusTaked = 'Cancelled';
         const statusFound = await prisma.status.findFirst({
           where: {
             status: {
@@ -113,13 +121,24 @@ export class Seeder {
             statusTypeId: StatusTypeFound?.id,
           },
         });
-        const dto = {
+        const season = episode.episode.match(/S(\d{2})E\d{2}/);
+        const NameSeason = `Season ${season[1]}`;
+        const seasonFound = await prisma.subcategory.findFirst({
+          where: {
+            subcategory: {
+              equals: NameSeason,
+              mode: 'insensitive',
+            },
+          },
+        })
+        const dto: Episode = {
           id: episode.id as number,
           name: episode.name as string,
           airDate: new Date(episode.air_date as string),
           episodeCode: episode.episode as string,
           statusId: (statusFound?.id as number) ?? undefined,
           duration: 23,
+          seasonId: (seasonFound?.id as number)?? undefined,
         };
         await prisma.episode.create({ data: dto });
         console.log('Episodio insertado');
@@ -155,6 +174,29 @@ export class Seeder {
     console.log(`Number of unique species: ${speciesSet.size}`);
     return speciesSet;
   }
+
+  async countSeasons(url: string, seasonSet = new Set<string>()) {
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+      for (const episode of data.results) {
+        if (episode.episode) {
+          const season = episode.episode.match(/S(\d{2})E\d{2}/);
+          if (season) {
+            seasonSet.add(`Season ${season[1]}`);
+          }
+        }
+      }
+      if (data.info.next) {
+        await this.countSeasons(data.info.next, seasonSet);
+      }
+    } catch (e) {
+      console.log(e);
+      return new Set<string>();
+    }
+    return seasonSet;
+  }
+
   async fetchAndInsertCharacters(url: string) {
     try {
       const response = await axios.get(url);
