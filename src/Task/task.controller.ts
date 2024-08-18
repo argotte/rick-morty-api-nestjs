@@ -21,6 +21,7 @@ export class TaskController {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     return this.taskService.getAllTasks(page);
@@ -40,6 +41,7 @@ export class TaskController {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     return this.taskService.getCharactersBySpecies(speciesId, page);
@@ -54,6 +56,7 @@ export class TaskController {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     return this.taskService.getCharactersByStatus(statusId, page);

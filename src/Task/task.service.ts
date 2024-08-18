@@ -12,6 +12,7 @@ export class TaskService {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     const pageSize = 5;
@@ -25,14 +26,18 @@ export class TaskService {
     const totalPages = Math.ceil(totalCharacters / pageSize);
     let nextPageNumber: number = page;
     nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
     const nextPageUrl =
       page < totalPages ? `/character?page=${nextPageNumber}` : null;
+    const prevPageUrl = page > 1 ? `/character?page=${prevPageNumber}` : null;
 
     return {
       totalCharacters,
       currentPage: page,
       totalPages,
       nextPageUrl,
+      prevPageUrl,
       data: characters,
     };
   }
@@ -49,6 +54,7 @@ export class TaskService {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     const pageSize = 5;
@@ -64,15 +70,23 @@ export class TaskService {
     const totalPages = Math.ceil(totalCharacters / pageSize);
     let nextPageNumber: number = page;
     nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
     const nextPageUrl =
       page < totalPages
         ? `/character/species/${speciesId}?page=${nextPageNumber}`
+        : null;
+    const prevPageUrl =
+      page > 1
+        ? `/character/species/${speciesId}?page=${prevPageNumber}`
         : null;
     return {
       totalCharacters,
       currentPage: page,
       totalPages,
       nextPageUrl,
+      prevPageUrl,
+
       data: characters,
     };
   }
@@ -85,6 +99,7 @@ export class TaskService {
     currentPage: number;
     totalPages: number;
     nextPageUrl: string | null;
+    prevPageUrl: string | null;
     data: Character[];
   }> {
     const pageSize = 5;
@@ -100,15 +115,20 @@ export class TaskService {
     const totalPages = Math.ceil(totalCharacters / pageSize);
     let nextPageNumber: number = page;
     nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
     const nextPageUrl =
       page < totalPages
         ? `/character/status/${statusId}?page=${nextPageNumber}`
         : null;
+    const prevPageUrl =
+      page > 1 ? `/character/species/${statusId}?page=${prevPageNumber}` : null;
     return {
       totalCharacters,
       currentPage: page,
       totalPages,
       nextPageUrl,
+      prevPageUrl,
       data: characters,
     };
   }
@@ -157,7 +177,7 @@ export class TaskService {
   }
 
   async deleteTask(id: number): Promise<Character> {
-    //check if exists 
+    //check if exists
     const existingCharacter = await this.prisma.character.findUnique({
       where: { id },
     });
