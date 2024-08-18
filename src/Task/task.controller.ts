@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { Character } from '@prisma/client';
 import { TaskService } from './task.service';
@@ -31,9 +32,23 @@ export class TaskController {
     return this.taskService.getTaskById(id);
   }
 
-  @Get(':speciesId')
-  async getCharactersBySpecies(@Param('species') speciesId: number) {
-    return this.taskService.getCharactersBySpecies(speciesId);
+  // @Get(':speciesId')
+  // async getCharactersBySpecies(@Param('species') speciesId: number) {
+  //   return this.taskService.getCharactersBySpecies(speciesId);
+  // }
+
+  @Get('species/:speciesId')
+  async getCharactersBySpecies(
+    @Param('speciesId',ParseIntPipe) speciesId: number,
+    @Query('page') page: number = 1,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    data: Character[];
+  }> {
+    return this.taskService.getCharactersBySpecies(speciesId, page);
   }
 
   // @Post()

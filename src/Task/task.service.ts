@@ -43,15 +43,36 @@ export class TaskService {
 
   async getCharactersBySpecies(
     speciesId: number,
-    page = 1,
-  ): Promise<Character[]> {
+    page:number = 1,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    data: Character[];
+  }> {
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
-    return this.prisma.character.findMany({
-      where: { speciesId },
+    const characters = await this.prisma.character.findMany({
+      where: { speciesId: speciesId },
       skip,
       take: pageSize,
     });
+    const totalCharacters = await this.prisma.character.count({
+      where: { speciesId },
+    });
+    const totalPages = Math.ceil(totalCharacters / pageSize);
+    let nextPageNumber: number = page;
+    nextPageNumber++;
+    const nextPageUrl =
+      page < totalPages ? `/tasks/species/${speciesId}?page=${nextPageNumber}` : null;
+    return {
+      totalCharacters,
+      currentPage: page,
+      totalPages,
+      nextPageUrl,
+      data: characters,
+    };
   }
   async updateTask(id: number, data: Character): Promise<Character> {
     const existingCharacter = await this.prisma.character.findUnique({
