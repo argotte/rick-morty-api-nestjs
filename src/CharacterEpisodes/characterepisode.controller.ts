@@ -116,7 +116,7 @@ export class CharacterEpisodeController {
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Delete a character-episode relation by its ID',
+    summary: 'Delete a character-episode relation by  ID',
   })
   async deleteCharacterEpisode(
     @Param('id', ParseIntPipe) id: number,

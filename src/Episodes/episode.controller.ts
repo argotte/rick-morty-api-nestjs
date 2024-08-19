@@ -26,7 +26,7 @@ export class EpisodeController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get an episode by its ID' })
+  @ApiOperation({ summary: 'Get an episode by    ID' })
   async getTaskById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<EpisodeDto> {
@@ -51,7 +51,7 @@ export class EpisodeController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update an episode by its ID' })
+  @ApiOperation({ summary: 'Update an episode by    ID' })
   @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
   @ApiBody({
     schema: {
@@ -73,14 +73,14 @@ export class EpisodeController {
   }
 
   @Put('cancel/:id')
-  @ApiOperation({ summary: 'Cancel an episode by its ID' })
+  @ApiOperation({ summary: 'Cancel an episode by    ID' })
   @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
   async cancelEpisode(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.episodeService.cancelEpisode(id);
   }
 
   @Put('activate/:id')
-  @ApiOperation({ summary: 'Activate an episode by its ID' })
+  @ApiOperation({ summary: 'Activate an episode by    ID' })
   @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
   async activateEpisode(
     @Param('id', ParseIntPipe) id: number,
