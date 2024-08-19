@@ -18,9 +18,6 @@ $ yarn install
 ```
 Asegúrate de tener un archivo ```.env``` con las configuraciones necesarias para tu base de datos y otros servicios.
 
-```bash
-$ yarn install
-```
 ## Documentacion en Swagger
 
 La documentación de la API está disponible en:
