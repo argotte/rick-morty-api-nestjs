@@ -9,8 +9,8 @@ async function bootstrap() {
   const seeder = new Seeder();
   await seeder.seed();
     const config = new DocumentBuilder()
-      .setTitle('API Documentation')
-      .setDescription('The API description')
+      .setTitle('Rick & Morty API')
+      .setDescription('Diego Argotte')
       .setVersion('1.0')
       .build();
     const document = SwaggerModule.createDocument(app, config);
