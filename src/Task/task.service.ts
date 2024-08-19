@@ -208,6 +208,19 @@ export class TaskService {
     if (!existingCharacter) {
       throw new BadRequestException('Character not found');
     }
+    const speciesId = await this.prisma.categories.findFirst({
+      where: { category: 'Species' },
+    });
+    if (!speciesId) {
+      throw new BadRequestException('Category Species not found');
+    }
+    const charactersId = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Characters' },
+    });
+    if (!charactersId) {
+      throw new BadRequestException('StatusType Characters not found');
+    }
+
 
     const dto: Character = {
       id,
@@ -219,7 +232,7 @@ export class TaskService {
     if (data.speciesId !== existingCharacter.speciesId) {
       const speciesExist = await this.prisma.subcategory.findUnique({
         where: {
-          categoryId: 1, //always 1 for species
+          categoryId: speciesId.id, //always 1 for species
           id: data.speciesId,
         }, // speciesId
       });
@@ -230,7 +243,7 @@ export class TaskService {
     if (data.statusId !== existingCharacter.statusId) {
       const statusExist = await this.prisma.status.findUnique({
         where: {
-          statusTypeId: 1, //always 1 for characters
+          statusTypeId: charactersId.id, //always 1 for characters
           id: data.statusId,
         }, // statusId
       });
@@ -258,15 +271,24 @@ export class TaskService {
     if (!existingCharacter) {
       throw new BadRequestException('Character not found');
     }
+        const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
+          where: { type: 'Characters' },
+        });
+        const statusSuspendedId = await this.prisma.status.findFirst({
+          where: { statusTypeId: statusTypeCharacter.id, status: 'Suspended' },
+        });
+        if (!statusSuspendedId) {
+          throw new BadRequestException('Status Suspended not found');
+        }
     //check if already suspended
-    if (existingCharacter.statusId === 2) {
+    if (existingCharacter.statusId === statusSuspendedId.id) {
       return 'Character was already suspended';
     }
     //suspend
     const dto: Character = {
       id,
       name: existingCharacter.name,
-      statusId: 2, //suspend
+      statusId: statusSuspendedId.id, //suspend
       speciesId: existingCharacter.speciesId,
     };
     await this.prisma.character.update({ where: { id }, data: dto });
@@ -281,15 +303,25 @@ export class TaskService {
     if (!existingCharacter) {
       throw new BadRequestException('Character not found');
     }
+
+    const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Characters' },
+    });
+    const statusActiveId= await this.prisma.status.findFirst({
+      where: { statusTypeId: statusTypeCharacter.id, status: 'Active' },
+    });
+    if (!statusActiveId) {
+      throw new BadRequestException('Status Active not found');
+    }
     //check if already suspended
-    if (existingCharacter.statusId === 1) {
+    if (existingCharacter.statusId === statusActiveId.id) {
       return 'Character was already Active';
     }
-    //suspend
+
     const dto: Character = {
       id,
       name: existingCharacter.name,
-      statusId: 1, //suspend
+      statusId: statusActiveId.id, //suspend
       speciesId: existingCharacter.speciesId,
     };
     await this.prisma.character.update({ where: { id }, data: dto });
@@ -297,8 +329,14 @@ export class TaskService {
   }
 
   async getSpeciesById(id: number): Promise<string> {
+    const categorySpeciesId= await this.prisma.categories.findFirst({
+      where: { category: 'Species' },
+    });
+    if (!categorySpeciesId) {
+      throw new BadRequestException('Category Species not found');
+    }
     const response = await this.prisma.subcategory.findUnique({
-      where: { id, categoryId: 1 },
+      where: { id, categoryId: categorySpeciesId.id },
     });
     //check if exists
     if (!response) {
@@ -308,8 +346,14 @@ export class TaskService {
   }
 
   async getStatusById(id: number): Promise<string> {
+    const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Characters' },
+    });
+    if (!statusTypeCharacter) {
+      throw new BadRequestException('StatusType Characters not found ');
+    }
     const response = await this.prisma.status.findUnique({
-      where: { id, statusTypeId: 1 },
+      where: { id, statusTypeId: statusTypeCharacter.id },
     });
     //check if exists
     if (!response) {

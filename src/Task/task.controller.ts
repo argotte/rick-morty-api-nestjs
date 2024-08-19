@@ -38,14 +38,14 @@ export class TaskController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a character by its ID' })
+  @ApiOperation({ summary: 'Get a character by    ID' })
   async getTaskById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<CharacterDto> {
     return this.taskService.getTaskById(id);
   }
   @Get('/specie/:id')
-  @ApiOperation({ summary: 'Get a species name by its ID' })
+  @ApiOperation({ summary: 'Get a species name by    ID' })
   async getSpeciesById(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.taskService.getSpeciesById(id);
   }
@@ -85,7 +85,7 @@ export class TaskController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a character by its ID' })
+  @ApiOperation({ summary: 'Update a character by    ID' })
   @ApiParam({ name: 'id', type: Number, description: 'Character ID' })
   @ApiBody({
     schema: {
@@ -104,13 +104,13 @@ export class TaskController {
   }
 
   @Put('suspend/:id')
-  @ApiOperation({ summary: 'Suspend a character by its ID' })
+  @ApiOperation({ summary: 'Suspend a character by    ID' })
   async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.taskService.deleteTask(id);
   }
 
   @Put('revive/:id')
-  @ApiOperation({ summary: 'Active a character by its ID' })
+  @ApiOperation({ summary: 'Active a character by    ID' })
   async reviveTask(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.taskService.reviveTask(id);
   }
