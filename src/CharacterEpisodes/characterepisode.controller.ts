@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
@@ -9,6 +10,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -17,6 +19,7 @@ import { CharacterEpisodeService } from './characterepisode.service';
 import { CreateCharacterEpisodeDto } from './CharacterEpisodeDto/createCharacterEpisode.dto';
 import { CharacterEpisodeForAllByCharacterStatusIdDto } from './CharacterEpisodeDto/characterepisodeForAllByCharacterStatusId.dto';
 import { CharacterEpisodeAllFilterDto } from './CharacterEpisodeDto/characterEpisodeAllFilter.dto';
+import { UpdateTimeDto } from './CharacterEpisodeDto/updateTime.dto';
 
 @ApiTags('Character-Episodes relation')
 @Controller('characterepisode')
@@ -121,8 +124,30 @@ export class CharacterEpisodeController {
     const deleted =
       await this.characterEpisodeService.deleteCharacterEpisode(id);
     if (!deleted) {
-      throw new NotFoundException(`CharacterEpisodeRelation with ID ${id} not found`);
+      throw new NotFoundException(
+        `CharacterEpisodeRelation with ID ${id} not found`,
+      );
     }
     return { message: 'CharacterEpisodeRelation deleted successfully' };
+  }
+  
+  @Put(':id/time')
+  @ApiOperation({
+    summary: 'Update the participation time of a character in an episode',
+  })
+  @ApiBody({ type: UpdateTimeDto })
+  async updateCharacterEpisodeTime(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTimeDto: UpdateTimeDto,
+  ): Promise<{ message: string }> {
+    const updated =
+      await this.characterEpisodeService.updateCharacterEpisodeTime(
+        id,
+        updateTimeDto,
+      );
+    if (!updated) {
+      throw new BadRequestException('Failed to update character-episode time');
+    }
+    return { message: 'CharacterEpisode time updated successfully' };
   }
 }

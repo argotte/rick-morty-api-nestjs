@@ -1,5 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CharacterEpisodeDto } from './CharacterEpisodeDto/characterepisode.dto';
 import { TaskService } from 'src/Task/task.service';
@@ -7,6 +11,7 @@ import { EpisodeService } from 'src/Episodes/episode.service';
 import { CreateCharacterEpisodeDto } from './CharacterEpisodeDto/createCharacterEpisode.dto';
 import { CharacterEpisodeForAllByCharacterStatusIdDto } from './CharacterEpisodeDto/characterepisodeForAllByCharacterStatusId.dto';
 import { CharacterEpisodeAllFilterDto } from './CharacterEpisodeDto/characterEpisodeAllFilter.dto';
+import { UpdateTimeDto } from './CharacterEpisodeDto/updateTime.dto';
 
 @Injectable()
 export class CharacterEpisodeService {
@@ -426,6 +431,108 @@ export class CharacterEpisodeService {
     if (!result) {
       throw new BadRequestException('Character-Episode relation not found');
     }
+    return true;
+  }
+
+  async updateCharacterEpisodeTime(
+    id: number,
+    updateTimeDto: UpdateTimeDto,
+  ): Promise<boolean> {
+    const { init, finish } = updateTimeDto;
+
+    const characterEpisode = await this.prisma.characterEpisodes.findUnique({
+      where: { id },
+    });
+    if (!characterEpisode) {
+      throw new NotFoundException('Character-Episode relation not found');
+    }
+
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterEpisode.characterId },
+    });
+    const episode = await this.prisma.episode.findUnique({
+      where: { id: characterEpisode.episodeId },
+    });
+    if (!character || !episode) {
+      throw new BadRequestException('Character or Episode not found');
+    }
+
+    // Validate init and finish format
+    const timeFormat = /^\d{2}:\d{2}$/;
+    if (!timeFormat.test(init) || !timeFormat.test(finish)) {
+      throw new BadRequestException(
+        'Init and Finish must be in the format "mm:ss"',
+      );
+    }
+    const minutesOfEpisode: number = episode.duration;
+    const episodeDurationInSeconds = minutesOfEpisode * 60;
+
+    // Convert init and finish to seconds
+    const [initMinutes, initSeconds] = init.split(':').map(Number);
+    const [finishMinutes, finishSeconds] = finish.split(':').map(Number);
+    const initTime = initMinutes * 60 + initSeconds;
+    const finishTime = finishMinutes * 60 + finishSeconds;
+
+    // validate initTime and finishTime in episode duration
+    if (
+      initTime > episodeDurationInSeconds ||
+      finishTime > episodeDurationInSeconds
+    ) {
+      throw new BadRequestException(
+        `Init and Finish times must be within the episode duration of ${minutesOfEpisode} minutes`,
+      );
+    }
+
+    // Validate que initTime>finishTime
+    if (initTime >= finishTime) {
+      throw new BadRequestException('Init time must be less than Finish time');
+    }
+
+    // validate if time overlay
+    const overlappingEpisodes = await this.prisma.characterEpisodes.findMany({
+      where: {
+        characterId: characterEpisode.characterId,
+        episodeId: characterEpisode.episodeId,
+        id: { not: id },
+        OR: [
+          {
+            init: { lte: finish },
+            finish: { gte: init },
+          },
+        ],
+      },
+    });
+
+    // Convert overlapping episode times to seconds for comparison
+    const hasOverlap = overlappingEpisodes.some((episode) => {
+      const [existingInitMinutes, existingInitSeconds] = episode.init
+        .split(':')
+        .map(Number);
+      const [existingFinishMinutes, existingFinishSeconds] = episode.finish
+        .split(':')
+        .map(Number);
+      const existingInitTime = existingInitMinutes * 60 + existingInitSeconds;
+      const existingFinishTime =
+        existingFinishMinutes * 60 + existingFinishSeconds;
+
+      return (
+        (initTime >= existingInitTime && initTime < existingFinishTime) ||
+        (finishTime > existingInitTime && finishTime <= existingFinishTime) ||
+        (initTime <= existingInitTime && finishTime >= existingFinishTime)
+      );
+    });
+
+    if (hasOverlap) {
+      throw new BadRequestException(
+        'Character already appears in this episode during the specified time interval',
+      );
+    }
+
+    await this.prisma.characterEpisodes.update({
+      where: { id },
+      data: { init, finish },
+    });
+
     return true;
   }
 }
