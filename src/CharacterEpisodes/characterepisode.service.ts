@@ -416,4 +416,16 @@ export class CharacterEpisodeService {
     };
     //http://localhost:3000/characterepisode/filters?page=1&statusIdCharacter=1&statusIdEpisode=3&seasonId=11
   }
+
+  async deleteCharacterEpisode(id: number): Promise<boolean> {
+    const result = await this.prisma.characterEpisodes.delete({
+      where: {
+        id,
+      },
+    });
+    if (!result) {
+      throw new BadRequestException('Character-Episode relation not found');
+    }
+    return true;
+  }
 }

@@ -3,7 +3,9 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -33,11 +35,11 @@ export class CharacterEpisodeController {
   async getRelationsByFilters(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('statusIdCharacter', ParseIntPipe)
-    statusIdCharacter: number=undefined,
+    statusIdCharacter: number = undefined,
     @Query('statusIdEpisode', ParseIntPipe)
-    statusIdEpisode: number=undefined,
+    statusIdEpisode: number = undefined,
     @Query('seasonId', ParseIntPipe)
-    seasonId: number=undefined,
+    seasonId: number = undefined,
   ): Promise<{
     totalCharacters: number;
     currentPage: number;
@@ -107,5 +109,20 @@ export class CharacterEpisodeController {
       statusId,
       page,
     );
+  }
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Delete a character-episode relation by its ID',
+  })
+  async deleteCharacterEpisode(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ message: string }> {
+    const deleted =
+      await this.characterEpisodeService.deleteCharacterEpisode(id);
+    if (!deleted) {
+      throw new NotFoundException(`CharacterEpisodeRelation with ID ${id} not found`);
+    }
+    return { message: 'CharacterEpisodeRelation deleted successfully' };
   }
 }
