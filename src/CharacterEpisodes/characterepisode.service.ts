@@ -49,10 +49,14 @@ export class CharacterEpisodeService {
       };
       characterEpisodeResponse.push(characterEpisode);
     }
-
+    let nextPageNumber: number = page;
+    nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
     const nextPageUrl =
-      page < totalPages ? `/characterepisode?page=${page + 1}` : null;
-    const prevPageUrl = page > 1 ? `/characterepisode?page=${page - 1}` : null;
+      page < totalPages ? `/characterepisode?page=${nextPageNumber}` : null;
+    const prevPageUrl =
+      page > 1 ? `/characterepisode?page=${prevPageNumber}` : null;
     return {
       totalEpisodes,
       currentPage: page,
@@ -187,5 +191,83 @@ export class CharacterEpisodeService {
       finish: characterEpisode.finish,
     };
     return response;
+  }
+
+  async getRelationsByCharacterStatusId(
+    statusId: number,
+    page: number = 1,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    prevPageUrl: string | null;
+    data: CharacterEpisodeDto[];
+  }> {
+    const characterEpisodeResponse: CharacterEpisodeDto[] = [];
+    const take = 10;
+    const skip = (page - 1) * take;
+    const charactersByStatus = await this.prisma.character.findMany({
+      where: {
+        statusId: statusId
+      },
+    });
+    if (!charactersByStatus || charactersByStatus.length === 0) {
+      throw new BadRequestException('No characters found with this status');
+    }
+    const AllRelations = await this.prisma.characterEpisodes.findMany({
+      where: {
+        characterId: {
+          in: charactersByStatus.map((character) => character.id),
+        },
+      },
+      take,
+      skip,
+    });
+    if (!AllRelations || AllRelations.length === 0) {
+      throw new BadRequestException('No character-episodes relations found');
+    }
+
+    const totalCharacters = AllRelations.length;
+    const totalPages = Math.ceil(totalCharacters / take);
+    if (!AllRelations || AllRelations.length === 0) {
+      throw new BadRequestException('No character-episodes relations found');
+    }
+    for (let i = 0; i < AllRelations.length; i++) {
+      const characterResponse = await this.characterService.getTaskById(
+        AllRelations[i].characterId,
+      );
+      const episodeResponse = await this.episodeService.getEpisodeById(
+        AllRelations[i].episodeId,
+      );
+      const characterEpisode: CharacterEpisodeDto = {
+        id: AllRelations[i].id,
+        character: characterResponse.name,
+        episode: episodeResponse.name,
+        init: AllRelations[i].init,
+        finish: AllRelations[i].finish,
+      };
+      characterEpisodeResponse.push(characterEpisode);
+    }
+    let nextPageNumber: number = page;
+    nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
+    const nextPageUrl =
+      page < totalPages
+        ? `/characterepisode/statusCharacter/${statusId}?page=${nextPageNumber}`
+        : null;
+    const prevPageUrl =
+      page > 1
+        ? `/characterepisode/statusCharacter/${statusId}?page=${prevPageNumber}`
+        : null;
+    return {
+      totalCharacters,
+      currentPage: page,
+      totalPages,
+      nextPageUrl,
+      prevPageUrl,
+      data: characterEpisodeResponse,
+    };
   }
 }

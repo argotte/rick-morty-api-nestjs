@@ -1,21 +1,22 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { CharacterEpisodeDto } from "./CharacterEpisodeDto/characterepisode.dto";
-import { CharacterEpisodeService } from "./characterepisode.service";
-import { CreateCharacterEpisodeDto } from "./CharacterEpisodeDto/createCharacterEpisode.dto";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { CharacterEpisodeDto } from './CharacterEpisodeDto/characterepisode.dto';
+import { CharacterEpisodeService } from './characterepisode.service';
+import { CreateCharacterEpisodeDto } from './CharacterEpisodeDto/createCharacterEpisode.dto';
 
 @ApiTags('Character-Episodes relation')
 @Controller('characterepisode')
 export class CharacterEpisodeController {
   constructor(private characterEpisodeService: CharacterEpisodeService) {}
-
-  // @Get()
-  // async getCharacterEpisodes(
-  //   @Query() query: GetCharacterEpisodesQuery,
-  // ): Promise<CharacterEpisode[]> {
-  //   return this.characterEpisodeService.getCharacterEpisodes(query);
-  // }
 
   @Get()
   @ApiOperation({ summary: 'Get all character-episode-relations' })
@@ -47,6 +48,28 @@ export class CharacterEpisodeController {
   ): Promise<CharacterEpisodeDto> {
     return this.characterEpisodeService.createCharacterEpisode(
       characterEpisodeDto,
+    );
+  }
+
+  @Get('statusCharacter/:statusId')
+  @ApiOperation({
+    summary: 'Get all character-episode-relation by characters-statusId ',
+  })
+  @ApiQuery({ name: 'page', required: false })
+  async getRelationsByCharacterStatusId(
+    @Param('statusId', ParseIntPipe) statusId: number,
+    @Query('page') page: number = 1,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    prevPageUrl: string | null;
+    data: CharacterEpisodeDto[];
+  }> {
+    return this.characterEpisodeService.getRelationsByCharacterStatusId(
+      statusId,
+      page,
     );
   }
 }
