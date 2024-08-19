@@ -18,7 +18,7 @@ export class CharacterEpisodeController {
   // }
 
   @Get()
-  @ApiOperation({ summary: 'Get all episodes' })
+  @ApiOperation({ summary: 'Get all character-episode-relations' })
   @ApiQuery({ name: 'page', required: false })
   async getAllEpisodes(@Query('page') page: number = 1): Promise<{
     totalEpisodes: number;
@@ -38,9 +38,9 @@ export class CharacterEpisodeController {
   ): Promise<CharacterEpisodeDto> {
     return this.characterEpisodeService.getCharacterEpisodeById(id);
   }
-  
+
   @Post()
-  @ApiOperation({ summary: 'Create a new character-episode relation' })
+  @ApiOperation({ summary: 'Create a new character-episode-relation' })
   @ApiBody({ type: CreateCharacterEpisodeDto })
   async createCharacterEpisode(
     @Body() characterEpisodeDto: CreateCharacterEpisodeDto,
