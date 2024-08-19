@@ -163,4 +163,29 @@ export class CharacterEpisodeService {
     };
     return response;
   }
+
+  async getCharacterEpisodeById(id: number): Promise<CharacterEpisodeDto> {
+    const characterEpisode = await this.prisma.characterEpisodes.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!characterEpisode) {
+      throw new BadRequestException('Character-Episode relation not found');
+    }
+    const character = await this.characterService.getTaskById(
+      characterEpisode.characterId,
+    );
+    const episode = await this.episodeService.getEpisodeById(
+      characterEpisode.episodeId,
+    );
+    const response: CharacterEpisodeDto = {
+      id: characterEpisode.id,
+      character: character.name,
+      episode: episode.name,
+      init: characterEpisode.init,
+      finish: characterEpisode.finish,
+    };
+    return response;
+  }
 }

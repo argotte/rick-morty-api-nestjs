@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { CharacterEpisodeDto } from "./CharacterEpisodeDto/characterepisode.dto";
 import { CharacterEpisodeService } from "./characterepisode.service";
@@ -31,6 +31,14 @@ export class CharacterEpisodeController {
     return this.characterEpisodeService.getAllInteractions(page);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get character-episode-relation by ID' })
+  async getCharacterEpisodeById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CharacterEpisodeDto> {
+    return this.characterEpisodeService.getCharacterEpisodeById(id);
+  }
+  
   @Post()
   @ApiOperation({ summary: 'Create a new character-episode relation' })
   @ApiBody({ type: CreateCharacterEpisodeDto })
