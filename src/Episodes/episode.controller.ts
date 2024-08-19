@@ -52,8 +52,8 @@ export class EpisodeController {
         airDate: '2013-12-02 04:30:00.000',
         episodeCode: 'S01E01',
         duration: 23,
-        statusId:4,
-        seasonId:11,
+        statusId: 4,
+        seasonId: 11,
       },
     },
   })
@@ -62,5 +62,19 @@ export class EpisodeController {
     @Body() data: Episode,
   ): Promise<EpisodeDto> {
     return this.episodeService.updateEpisode(id, data);
+  }
+
+  @Put('cancel/:id')
+  @ApiOperation({ summary: 'Cancel an episode by its ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
+  async cancelEpisode(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.episodeService.cancelEpisode(id);
+  }
+
+  @Put('activate/:id')
+  @ApiOperation({ summary: 'Activate an episode by its ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
+  async activateEpisode(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.episodeService.reactiveEpisode(id);
   }
 }

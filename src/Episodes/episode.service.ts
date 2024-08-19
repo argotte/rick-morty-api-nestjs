@@ -171,24 +171,24 @@ export class EpisodeService {
       seasonId: data.seasonId ?? existingEpisode.seasonId,
     };
 
-    if(data.name!== existingEpisode.name){
-      const episodeNameExist= await this.prisma.episode.findFirst({
-        where:{
-          name: data.name
-        }
+    if (data.name !== existingEpisode.name) {
+      const episodeNameExist = await this.prisma.episode.findFirst({
+        where: {
+          name: data.name,
+        },
       });
-      if(episodeNameExist){
-        throw new BadRequestException('That episode name already exists')
+      if (episodeNameExist) {
+        throw new BadRequestException('That episode name already exists');
       }
     }
-    if(data.episodeCode !== existingEpisode.episodeCode){
-      const episodeCodeExist= await this.prisma.episode.findFirst({
-        where:{
-          episodeCode: data.episodeCode
-        }
+    if (data.episodeCode !== existingEpisode.episodeCode) {
+      const episodeCodeExist = await this.prisma.episode.findFirst({
+        where: {
+          episodeCode: data.episodeCode,
+        },
       });
-      if(episodeCodeExist){
-        throw new BadRequestException('That episode code already exists')
+      if (episodeCodeExist) {
+        throw new BadRequestException('That episode code already exists');
       }
     }
     if (data.seasonId !== existingEpisode.seasonId) {
@@ -202,16 +202,15 @@ export class EpisodeService {
         where: {
           categoryId: categorySeasonId.id, //should be always 2 for season
           id: data.statusId,
-        }, 
+        },
       });
 
       if (!seasonExist) {
         throw new BadRequestException('That season ID does not exist');
       }
-      
     }
     if (data.statusId !== existingEpisode.statusId) {
-      const statusId= await this.prisma.statusTypes.findFirst({
+      const statusId = await this.prisma.statusTypes.findFirst({
         where: {
           type: 'Episodes',
         },
@@ -227,9 +226,9 @@ export class EpisodeService {
         throw new BadRequestException('That kind of status does not exist');
       }
     }
-  if (dto.airDate) {
-    dto.airDate = new Date(dto.airDate);
-  }
+    if (dto.airDate) {
+      dto.airDate = new Date(dto.airDate);
+    }
     await this.prisma.episode.update({ where: { id }, data: dto });
     const response: EpisodeDto = {
       id: dto.id,
@@ -241,5 +240,73 @@ export class EpisodeService {
       season: await this.getSubcategoryById(dto.seasonId),
     };
     return response;
+  }
+
+  async cancelEpisode(id: number): Promise<string> {
+    //check if exists
+    const existingEpisode = await this.prisma.episode.findUnique({
+      where: { id },
+    });
+    if (!existingEpisode) {
+      throw new BadRequestException('Episode not found');
+    }
+    const existingStatusType = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Episodes' },
+    });
+
+    const CancelledId = await this.prisma.status.findFirst({
+      where: { statusTypeId: existingStatusType.id, status: 'Cancelled' },
+    });
+
+    //check if already suspended
+    if (existingEpisode.statusId === CancelledId.id) {
+      return 'Episode was already suspended';
+    }
+    //suspend
+    const dto: Episode = {
+      id,
+      name: existingEpisode.name,
+      airDate: existingEpisode.airDate,
+      statusId: CancelledId.id, //suspend
+      seasonId: existingEpisode.seasonId,
+      episodeCode: existingEpisode.episodeCode,
+      duration: existingEpisode.duration,
+    };
+    await this.prisma.episode.update({ where: { id }, data: dto });
+    return `Episode ${dto.name},${dto.episodeCode} cancelled`;
+  }
+
+  async reactiveEpisode(id: number): Promise<string> {
+    //check if exists
+    const existingEpisode = await this.prisma.episode.findUnique({
+      where: { id },
+    });
+    if (!existingEpisode) {
+      throw new BadRequestException('Episode not found');
+    }
+    const existingStatusType = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Episodes' },
+    });
+
+    const activeID = await this.prisma.status.findFirst({
+      where: { statusTypeId: existingStatusType.id, status: 'Active' },
+    });
+
+    //check if already suspended
+    if (existingEpisode.statusId === activeID.id) {
+      return 'Episode was already active';
+    }
+    //suspend
+    const dto: Episode = {
+      id,
+      name: existingEpisode.name,
+      airDate: existingEpisode.airDate,
+      statusId: activeID.id, //suspend
+      seasonId: existingEpisode.seasonId,
+      episodeCode: existingEpisode.episodeCode,
+      duration: existingEpisode.duration,
+    };
+    await this.prisma.episode.update({ where: { id }, data: dto });
+    return `Episode ${dto.name},${dto.episodeCode} activated`;
   }
 }
