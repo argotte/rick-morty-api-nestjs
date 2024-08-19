@@ -70,8 +70,8 @@ model CharacterEpisodes {
   id          Int       @id @default(autoincrement())
   characterId Int
   episodeId   Int
-  startTime   Int
-  endTime     Int
+  init   String
+  finish     String
   character   Character @relation(fields: [characterId], references: [id])
   episode     Episode   @relation(fields: [episodeId], references: [id])
 }
