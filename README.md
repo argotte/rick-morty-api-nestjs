@@ -16,7 +16,7 @@ Para instalar las dependencias del proyecto, ejecuta:
 ```bash
 $ yarn install
 ```
-Asegúrate de tener un archivo ```.env``` con las configuraciones necesarias para tu base de datos y otros servicios.
+Asegúrate de tener un archivo ```.env``` con las configuraciones necesarias para tu base de datos y otros servicios. En el repo existe el archivo ```.env.example``` donde se puede ver un ejemplo de como introducir credenciales. Copiar y pegar en ```env``` y modificar.
 
 ## Documentacion en Swagger
 
