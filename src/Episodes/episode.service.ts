@@ -80,8 +80,15 @@ export class EpisodeService {
   }
 
   async getStatusById(id: number): Promise<string> {
+    const statusTypeEpisodesId = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Episodes' },
+    });
+    if (!statusTypeEpisodesId) {
+      throw new BadRequestException('Status type not found');
+    }
+
     const response = await this.prisma.status.findUnique({
-      where: { id, statusTypeId: 2 },
+      where: { id, statusTypeId: statusTypeEpisodesId.id },
     });
     //check if exists
     if (!response) {
