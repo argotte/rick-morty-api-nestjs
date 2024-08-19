@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Query } from "@nestjs/common";
-import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { CharacterEpisodeDto } from "./CharacterEpisodeDto/characterepisode.dto";
 import { CharacterEpisodeService } from "./characterepisode.service";
+import { CreateCharacterEpisodeDto } from "./CharacterEpisodeDto/createCharacterEpisode.dto";
 
 @ApiTags('Character-Episodes relation')
 @Controller('characterepisode')
@@ -28,5 +29,16 @@ export class CharacterEpisodeController {
     data: CharacterEpisodeDto[];
   }> {
     return this.characterEpisodeService.getAllInteractions(page);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new character-episode relation' })
+  @ApiBody({ type: CreateCharacterEpisodeDto })
+  async createCharacterEpisode(
+    @Body() characterEpisodeDto: CreateCharacterEpisodeDto,
+  ): Promise<CharacterEpisodeDto> {
+    return this.characterEpisodeService.createCharacterEpisode(
+      characterEpisodeDto,
+    );
   }
 }
