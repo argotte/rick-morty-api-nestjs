@@ -58,6 +58,26 @@ export class EpisodeService {
       data: episodeResponse,
     };
   }
+  async getEpisodeById(id: number): Promise<EpisodeDto> {
+    const responseEpisode = await this.prisma.episode.findUnique({
+      where: { id},
+    });
+    //check if exists
+    if (!responseEpisode) {
+      throw new BadRequestException('Episode not found');
+    }
+    const response: EpisodeDto = {
+      id: responseEpisode.id,
+      name: responseEpisode.name,
+      episodeCode: responseEpisode.episodeCode,
+      air_date: responseEpisode.airDate,
+      status: (await this.getStatusById(responseEpisode.statusId)) ?? undefined,
+      duration: responseEpisode.duration,
+      season:
+        (await this.getSubcategoryById(responseEpisode.seasonId)) ?? undefined,
+    };
+    return response;
+  }
 
   async getStatusById(id: number): Promise<string> {
     const response = await this.prisma.status.findUnique({

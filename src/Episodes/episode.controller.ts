@@ -25,6 +25,14 @@ export class EpisodeController {
     return this.episodeService.getAllEpisodes(page);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get an episode by its ID' })
+  async getTaskById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EpisodeDto> {
+    return this.episodeService.getEpisodeById(id);
+  }
+
   @Get('season/:seasonNumber')
   @ApiOperation({ summary: 'Get all episodes by Season Number' })
   @ApiQuery({ name: 'page', required: false })
@@ -74,7 +82,9 @@ export class EpisodeController {
   @Put('activate/:id')
   @ApiOperation({ summary: 'Activate an episode by its ID' })
   @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
-  async activateEpisode(@Param('id', ParseIntPipe) id: number): Promise<string> {
+  async activateEpisode(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<string> {
     return this.episodeService.reactiveEpisode(id);
   }
 }
