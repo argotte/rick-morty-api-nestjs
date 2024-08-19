@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
   ParseIntPipe,
@@ -12,11 +13,46 @@ import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CharacterEpisodeDto } from './CharacterEpisodeDto/characterepisode.dto';
 import { CharacterEpisodeService } from './characterepisode.service';
 import { CreateCharacterEpisodeDto } from './CharacterEpisodeDto/createCharacterEpisode.dto';
+import { CharacterEpisodeForAllByCharacterStatusIdDto } from './CharacterEpisodeDto/characterepisodeForAllByCharacterStatusId.dto';
+import { CharacterEpisodeAllFilterDto } from './CharacterEpisodeDto/characterEpisodeAllFilter.dto';
 
 @ApiTags('Character-Episodes relation')
 @Controller('characterepisode')
 export class CharacterEpisodeController {
   constructor(private characterEpisodeService: CharacterEpisodeService) {}
+
+  @Get('filters/')
+  @ApiOperation({
+    summary:
+      'Get all character-episode relations filtered by character status, episode status, and season',
+  })
+  @ApiQuery({ name: 'statusIdCharacter', required: true })
+  @ApiQuery({ name: 'statusIdEpisode', required: true })
+  @ApiQuery({ name: 'seasonId', required: true })
+  @ApiQuery({ name: 'page', required: false })
+  async getRelationsByFilters(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('statusIdCharacter', ParseIntPipe)
+    statusIdCharacter: number=undefined,
+    @Query('statusIdEpisode', ParseIntPipe)
+    statusIdEpisode: number=undefined,
+    @Query('seasonId', ParseIntPipe)
+    seasonId: number=undefined,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    prevPageUrl: string | null;
+    data: CharacterEpisodeAllFilterDto[];
+  }> {
+    return this.characterEpisodeService.getRelationsByFilters(
+      page,
+      statusIdCharacter,
+      statusIdEpisode,
+      seasonId,
+    );
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all character-episode-relations' })
@@ -32,7 +68,7 @@ export class CharacterEpisodeController {
     return this.characterEpisodeService.getAllInteractions(page);
   }
 
-  @Get(':id')
+  @Get('One/:id')
   @ApiOperation({ summary: 'Get character-episode-relation by ID' })
   async getCharacterEpisodeById(
     @Param('id', ParseIntPipe) id: number,
@@ -65,7 +101,7 @@ export class CharacterEpisodeController {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: CharacterEpisodeDto[];
+    data: CharacterEpisodeForAllByCharacterStatusIdDto[];
   }> {
     return this.characterEpisodeService.getRelationsByCharacterStatusId(
       statusId,

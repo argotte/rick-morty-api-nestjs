@@ -5,6 +5,8 @@ import { CharacterEpisodeDto } from './CharacterEpisodeDto/characterepisode.dto'
 import { TaskService } from 'src/Task/task.service';
 import { EpisodeService } from 'src/Episodes/episode.service';
 import { CreateCharacterEpisodeDto } from './CharacterEpisodeDto/createCharacterEpisode.dto';
+import { CharacterEpisodeForAllByCharacterStatusIdDto } from './CharacterEpisodeDto/characterepisodeForAllByCharacterStatusId.dto';
+import { CharacterEpisodeAllFilterDto } from './CharacterEpisodeDto/characterEpisodeAllFilter.dto';
 
 @Injectable()
 export class CharacterEpisodeService {
@@ -202,16 +204,27 @@ export class CharacterEpisodeService {
     totalPages: number;
     nextPageUrl: string | null;
     prevPageUrl: string | null;
-    data: CharacterEpisodeDto[];
+    data: CharacterEpisodeForAllByCharacterStatusIdDto[];
   }> {
-    const characterEpisodeResponse: CharacterEpisodeDto[] = [];
+    const characterEpisodeResponse: CharacterEpisodeForAllByCharacterStatusIdDto[] =
+      [];
     const take = 10;
     const skip = (page - 1) * take;
     const charactersByStatus = await this.prisma.character.findMany({
       where: {
-        statusId: statusId
+        statusId: statusId,
       },
     });
+
+    const statusName = await this.prisma.status.findUnique({
+      where: {
+        id: statusId,
+      },
+    });
+
+    if (!statusName) {
+      throw new BadRequestException('Status not found');
+    }
     if (!charactersByStatus || charactersByStatus.length === 0) {
       throw new BadRequestException('No characters found with this status');
     }
@@ -225,13 +238,13 @@ export class CharacterEpisodeService {
       skip,
     });
     if (!AllRelations || AllRelations.length === 0) {
-      throw new BadRequestException('No character-episodes relations found');
+      throw new BadRequestException('No character-episodes relations found!!!');
     }
 
     const totalCharacters = AllRelations.length;
     const totalPages = Math.ceil(totalCharacters / take);
     if (!AllRelations || AllRelations.length === 0) {
-      throw new BadRequestException('No character-episodes relations found');
+      throw new BadRequestException('No character-episodes relations found!!!');
     }
     for (let i = 0; i < AllRelations.length; i++) {
       const characterResponse = await this.characterService.getTaskById(
@@ -240,12 +253,13 @@ export class CharacterEpisodeService {
       const episodeResponse = await this.episodeService.getEpisodeById(
         AllRelations[i].episodeId,
       );
-      const characterEpisode: CharacterEpisodeDto = {
+      const characterEpisode: CharacterEpisodeForAllByCharacterStatusIdDto = {
         id: AllRelations[i].id,
         character: characterResponse.name,
         episode: episodeResponse.name,
         init: AllRelations[i].init,
         finish: AllRelations[i].finish,
+        status: statusName.status,
       };
       characterEpisodeResponse.push(characterEpisode);
     }
@@ -269,5 +283,137 @@ export class CharacterEpisodeService {
       prevPageUrl,
       data: characterEpisodeResponse,
     };
+  }
+
+  async getRelationsByFilters(
+    page: number = 1,
+    statusIdCharacter?: number,
+    statusIdEpisode?: number,
+    seasonId?: number,
+  ): Promise<{
+    totalCharacters: number;
+    currentPage: number;
+    totalPages: number;
+    nextPageUrl: string | null;
+    prevPageUrl: string | null;
+    data: CharacterEpisodeAllFilterDto[];
+  }> {
+    const characterEpisodeResponse: CharacterEpisodeAllFilterDto[] = [];
+    const take = 5;
+    const skip = (page - 1) * take;
+
+    // Obtener personajes por estado
+    const charactersByStatus = await this.prisma.character.findMany({
+      where: {
+        statusId: statusIdCharacter,
+      },
+    });
+
+    // Obtener nombre del estado del personaje
+    const statusName = await this.prisma.status.findUnique({
+      where: {
+        id: statusIdCharacter,
+      },
+    });
+
+    // Obtener episodios por estado
+    const episodesByStatus = await this.prisma.episode.findMany({
+      where: {
+        statusId: statusIdEpisode,
+      },
+    });
+
+    // Obtener nombre del estado del episodio
+    const statusEpisodeName = await this.prisma.status.findUnique({
+      where: {
+        id: statusIdEpisode,
+      },
+    });
+
+    // Obtener categoría de la temporada
+    const seasonIdCategory = await this.prisma.categories.findFirst({
+      where: {
+        category: 'Season',
+      },
+    });
+
+    // Obtener subcategoría de la temporada
+    const whichSeason = await this.prisma.subcategory.findFirst({
+      where: {
+        categoryId: seasonIdCategory.id,
+        id: seasonId,
+      },
+    });
+
+    // Verificar si se encontraron personajes y episodios
+    if (
+      charactersByStatus.length === 0 ||
+      episodesByStatus.length === 0 ||
+      !whichSeason
+    ) {
+      throw new BadRequestException('Not found!!');
+    }
+
+    // Obtener relaciones de personajes y episodios
+    const AllRelations = await this.prisma.characterEpisodes.findMany({
+      where: {
+        characterId: {
+          in: charactersByStatus.map((character) => character.id),
+        },
+        episode: {
+          id: {
+            in: episodesByStatus.map((episode) => episode.id),
+          },
+          seasonId: whichSeason.id,
+        },
+      },
+      take,
+      skip,
+    });
+
+    if (!AllRelations || AllRelations.length === 0) {
+      throw new BadRequestException('No character-episodes relations found!!');
+    }
+
+    // Construir la respuesta
+    for (let i = 0; i < AllRelations.length; i++) {
+      const characterResponse = await this.characterService.getTaskById(
+        AllRelations[i].characterId,
+      );
+      const episodeResponse = await this.episodeService.getEpisodeById(
+        AllRelations[i].episodeId,
+      );
+      const characterEpisode: CharacterEpisodeAllFilterDto = {
+        id: AllRelations[i].id,
+        character: characterResponse.name,
+        episode: episodeResponse.name,
+        init: AllRelations[i].init,
+        finish: AllRelations[i].finish,
+        statusCharacter: statusName.status,
+        statusEpisode: statusEpisodeName.status,
+        season: whichSeason.subcategory,
+      };
+      characterEpisodeResponse.push(characterEpisode);
+    }
+    let nextPageNumber: number = page;
+    nextPageNumber++;
+    let prevPageNumber: number = page;
+    prevPageNumber--;
+    return {
+      totalCharacters: characterEpisodeResponse.length,
+      currentPage: page,
+      totalPages: Math.ceil(characterEpisodeResponse.length / take),
+
+      nextPageUrl:
+        page * take < characterEpisodeResponse.length
+          ? `/characterepisode/filters?page=${nextPageNumber}&statusIdCharacter=${statusIdCharacter}&statusIdEpisode=${statusIdEpisode}&seasonId=${seasonId}`
+          : null,
+      prevPageUrl:
+        page > 1
+          ? `/characterepisode/filters?page=${prevPageNumber}&statusIdCharacter=${statusIdCharacter}&statusIdEpisode=${statusIdEpisode}&seasonId=${seasonId}`
+          : null,
+      data: characterEpisodeResponse,
+    };
+    //http://localhost:3000/characterepisode/filters?page=1&statusIdCharacter=1&statusIdEpisode=3&seasonId=11
   }
 }
