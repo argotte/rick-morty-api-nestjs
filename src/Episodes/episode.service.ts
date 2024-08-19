@@ -60,7 +60,7 @@ export class EpisodeService {
   }
   async getEpisodeById(id: number): Promise<EpisodeDto> {
     const responseEpisode = await this.prisma.episode.findUnique({
-      where: { id},
+      where: { id },
     });
     //check if exists
     if (!responseEpisode) {

@@ -221,7 +221,6 @@ export class TaskService {
       throw new BadRequestException('StatusType Characters not found');
     }
 
-
     const dto: Character = {
       id,
       name: data.name ?? existingCharacter.name,
@@ -271,15 +270,15 @@ export class TaskService {
     if (!existingCharacter) {
       throw new BadRequestException('Character not found');
     }
-        const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
-          where: { type: 'Characters' },
-        });
-        const statusSuspendedId = await this.prisma.status.findFirst({
-          where: { statusTypeId: statusTypeCharacter.id, status: 'Suspended' },
-        });
-        if (!statusSuspendedId) {
-          throw new BadRequestException('Status Suspended not found');
-        }
+    const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
+      where: { type: 'Characters' },
+    });
+    const statusSuspendedId = await this.prisma.status.findFirst({
+      where: { statusTypeId: statusTypeCharacter.id, status: 'Suspended' },
+    });
+    if (!statusSuspendedId) {
+      throw new BadRequestException('Status Suspended not found');
+    }
     //check if already suspended
     if (existingCharacter.statusId === statusSuspendedId.id) {
       return 'Character was already suspended';
@@ -307,7 +306,7 @@ export class TaskService {
     const statusTypeCharacter = await this.prisma.statusTypes.findFirst({
       where: { type: 'Characters' },
     });
-    const statusActiveId= await this.prisma.status.findFirst({
+    const statusActiveId = await this.prisma.status.findFirst({
       where: { statusTypeId: statusTypeCharacter.id, status: 'Active' },
     });
     if (!statusActiveId) {
@@ -329,7 +328,7 @@ export class TaskService {
   }
 
   async getSpeciesById(id: number): Promise<string> {
-    const categorySpeciesId= await this.prisma.categories.findFirst({
+    const categorySpeciesId = await this.prisma.categories.findFirst({
       where: { category: 'Species' },
     });
     if (!categorySpeciesId) {
