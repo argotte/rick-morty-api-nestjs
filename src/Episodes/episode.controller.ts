@@ -1,10 +1,11 @@
 /* eslint-disable prettier/prettier */
 // import { Get, Query } from '@nestjs/common';
 // import { ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Put, Query } from '@nestjs/common';
 import { EpisodeService } from './episode.service';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EpisodeDto } from './EpisodeDto/episode.dto';
+import { Episode } from '@prisma/client';
 @ApiTags('Episodes')
 @Controller('episode')
 export class EpisodeController {
@@ -38,6 +39,28 @@ export class EpisodeController {
     prevPageUrl: string | null;
     data: EpisodeDto[];
   }> {
-    return this.episodeService.getEpisodesBySeasonNumber(seasonNumber,page);
+    return this.episodeService.getEpisodesBySeasonNumber(seasonNumber, page);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update an episode by its ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'episode ID' })
+  @ApiBody({
+    schema: {
+      example: {
+        name: 'Pilot',
+        airDate: '2013-12-02 04:30:00.000',
+        episodeCode: 'S01E01',
+        duration: 23,
+        statusId:4,
+        seasonId:11,
+      },
+    },
+  })
+  async updateEpisode(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Episode,
+  ): Promise<EpisodeDto> {
+    return this.episodeService.updateEpisode(id, data);
   }
 }

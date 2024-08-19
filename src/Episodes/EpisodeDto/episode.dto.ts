@@ -2,8 +2,8 @@
 export class EpisodeDto {
   id: number;
   name: string;
+  episodeCode:string;
   air_date: Date;
-  episode: string;
   status: string;
   duration: number;
   season: string;
