@@ -250,3 +250,20 @@ export class Seeder {
 }
 
 const prisma = new PrismaClient();
+
+
+
+//In case you may need this...... 
+//if you wanna delete all data from the database
+// DELETE  from "Subcategory";Alter SEQUENCE  "Subcategory_id_seq" RESTART  with  1;
+
+// DELETE FROM "StatusTypes";Alter SEQUENCE  "StatusTypes_id_seq" RESTART  with  1;
+
+// DELETE FROM "Status";Alter SEQUENCE  "Status_id_seq" RESTART  with  1;
+
+// DELETE FROM "Categories"; Alter SEQUENCE  "Categories_id_seq" RESTART  with  1;
+
+// DELETE FROM "Character";
+// DELETE FROM "Episode";
+
+// DELETE FROM "CharacterEpisodes"; Alter SEQUENCE "CharacterEpisodes_id_seq" RESTART with 1;
