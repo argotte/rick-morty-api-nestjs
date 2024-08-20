@@ -18,6 +18,12 @@ $ yarn install
 ```
 Asegúrate de tener un archivo ```.env``` con las configuraciones necesarias para tu base de datos y otros servicios. En el repo existe el archivo ```.env.example``` donde se puede ver un ejemplo de como introducir credenciales. Copiar y pegar en ```env``` y modificar.
 
+Luego para ejecutar
+
+```bash
+$ yarn start:dev
+```
+
 ## Documentacion en Swagger
 
 La documentación de la API está disponible en:
