@@ -14,14 +14,19 @@ Consume la API de Rick & Morty que se puede conseguir en: https://rickandmortyap
 Para instalar las dependencias del proyecto, ejecuta:
 
 ```bash
-$ yarn install
+yarn install
 ```
 Asegúrate de tener un archivo ```.env``` con las configuraciones necesarias para tu base de datos y otros servicios. En el repo existe el archivo ```.env.example``` donde se puede ver un ejemplo de como introducir credenciales. Copiar y pegar en ```env``` y modificar.
 
+Instalar la migracion en tu base de datos de postgres
+
+```bash
+yarn prisma migrate dev
+```
 Luego para ejecutar
 
 ```bash
-$ yarn start:dev
+yarn start:dev
 ```
 
 ## Documentacion en Swagger
