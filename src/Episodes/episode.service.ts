@@ -228,7 +228,7 @@ export class EpisodeService {
       const seasonExist = await this.prisma.subcategory.findUnique({
         where: {
           categoryId: categorySeasonId.id, //should be always 2 for season
-          id: data.statusId,
+          id: data.seasonId,
         },
       });
 
